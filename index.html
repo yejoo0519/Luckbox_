@@ -663,8 +663,9 @@ function rollSpirit(){
   const r=Math.random()*100;
   let grade, pool;
   const thresh4 = sMode==='on' ? 77 : 80;
+  const thresh5 = sMode==='on' ? 92 : 95;
   if(r<thresh4){grade=4;pool=SPIRITS_4;}
-  else if(r<95){grade=5;pool=SPIRITS_5;}
+  else if(r<thresh5){grade=5;pool=SPIRITS_5;}
   else{grade=6;pool=SPIRITS_6;}
   const spirit={...rnd(pool), grade};
   const pairs = grade===4?OPT_PAIRS_4:grade===5?OPT_PAIRS_5:OPT_PAIRS_6;
