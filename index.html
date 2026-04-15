@@ -1,0 +1,192 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>행운의 상자</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', sans-serif; background: #f5f5f0; min-height: 100vh; display: flex; justify-content: center; padding: 2rem 1rem; }
+  .wrap { width: 100%; max-width: 520px; }
+  h1 { font-size: 22px; font-weight: 600; color: #1a1a1a; margin-bottom: 1.5rem; text-align: center; }
+  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1.25rem; }
+  .stat-card { background: #fff; border: 1px solid #e0e0d8; border-radius: 10px; padding: 0.75rem 1rem; }
+  .stat-label { font-size: 12px; color: #888; margin-bottom: 4px; }
+  .stat-value { font-size: 20px; font-weight: 600; color: #1a1a1a; }
+  .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1rem; }
+  .box-btn { width: 100%; padding: 1rem; font-size: 18px; font-weight: 600; background: #1a1a1a; color: #fff; border: none; border-radius: 12px; cursor: pointer; transition: background 0.15s, transform 0.1s; }
+  .box-btn.ten { background: #3a3a8a; }
+  .box-btn:hover { background: #333; }
+  .box-btn.ten:hover { background: #4a4aaa; }
+  .box-btn:active { transform: scale(0.97); }
+  .special-notice { background: #fff8e1; border: 1px solid #ffe082; border-radius: 10px; padding: 0.75rem 1rem; margin-bottom: 1rem; display: none; }
+  .special-notice .special-title { font-size: 13px; font-weight: 600; color: #b8860b; margin-bottom: 4px; }
+  .special-notice .special-body { font-size: 13px; color: #7a5c00; }
+  .result-area { min-height: 80px; max-height: 300px; overflow-y: auto; background: #fff; border: 1px solid #e0e0d8; border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 1.25rem; display: flex; flex-direction: column; justify-content: center; gap: 6px; }
+  .result-item-name { font-size: 18px; font-weight: 600; color: #1a1a1a; }
+  .result-item-qty { font-size: 13px; color: #666; margin-top: 3px; }
+  .result-prob { font-size: 12px; color: #aaa; margin-top: 2px; }
+  .result-empty { font-size: 14px; color: #bbb; }
+  .history-title { font-size: 13px; color: #888; margin-bottom: 8px; font-weight: 600; }
+  .history-list { display: flex; flex-direction: column; gap: 0; max-height: 220px; overflow-y: auto; background: #fff; border: 1px solid #e0e0d8; border-radius: 10px; }
+  .history-item { font-size: 13px; color: #555; padding: 8px 12px; border-bottom: 1px solid #f0f0ea; display: flex; justify-content: space-between; }
+  .history-item:last-child { border-bottom: none; }
+  .history-item .num { color: #bbb; margin-right: 6px; }
+  .reset-btn { margin-top: 1rem; font-size: 13px; color: #888; background: none; border: 1px solid #ddd; border-radius: 8px; padding: 6px 14px; cursor: pointer; }
+  .reset-btn:hover { background: #f0f0ea; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🎁 행운의 상자</h1>
+  <div class="stats">
+    <div class="stat-card"><div class="stat-label">뽑기 횟수</div><div class="stat-value" id="count">0회</div></div>
+    <div class="stat-card"><div class="stat-label">사용 금액</div><div class="stat-value" id="cost">0원</div></div>
+  </div>
+  <div class="btn-row">
+    <button class="box-btn" onclick="drawOne()">상자 열기 (1회)</button>
+    <button class="box-btn ten" onclick="drawTen()">상자 열기 (10회)</button>
+  </div>
+  <div class="special-notice" id="special-notice">
+    <div class="special-title">✨ 희귀 아이템 획득!</div>
+    <div class="special-body" id="special-body"></div>
+  </div>
+  <div class="result-area" id="result-area">
+    <span class="result-empty">상자를 눌러 아이템을 뽑아보세요</span>
+  </div>
+  <div class="history-title">최근 뽑기 기록</div>
+  <div class="history-list" id="history"></div>
+  <button class="reset-btn" onclick="reset()">초기화</button>
+</div>
+
+<script>
+const ITEMS = [
+  {name:"블라드",qty:1,prob:0.0500,special:true},{name:"마누스",qty:1,prob:0.0500,special:true},{name:"마누스 장식",qty:1,prob:0.1000,special:true},
+  {name:"더블 맥스 Lv+1",qty:3,prob:0.3000},{name:"더블 맥스 Lv+1",qty:5,prob:0.1500},
+  {name:"강림 강화곤",qty:1,prob:0.5500},{name:"커스리퍼",qty:1,prob:0.0500},
+  {name:"미티어 SSS",qty:1,prob:0.0100},{name:"미티어 SS",qty:1,prob:0.1000},{name:"미티어 S",qty:1,prob:0.5000},
+  {name:"미티어 A",qty:1,prob:1.5000},{name:"미티어 B",qty:1,prob:2.0000},
+  {name:"이블 던 SSS",qty:1,prob:0.0100},{name:"이블 던 SS",qty:1,prob:0.1000},{name:"이블 던 S",qty:1,prob:0.5000},
+  {name:"이블 던 A",qty:1,prob:1.5000},{name:"이블 던 B",qty:1,prob:2.0000},
+  {name:"레버넌트 SSS",qty:1,prob:0.0100},{name:"레버넌트 SS",qty:1,prob:0.1000},{name:"레버넌트 S",qty:1,prob:0.5000},
+  {name:"레버넌트 A",qty:1,prob:1.5000},{name:"레버넌트 B",qty:1,prob:2.0000},
+  {name:"넬로 드래곤 SSS",qty:1,prob:0.0100},{name:"넬로 드래곤 SS",qty:1,prob:0.1000},{name:"넬로 드래곤 S",qty:1,prob:0.5000},
+  {name:"넬로 드래곤 A",qty:1,prob:1.5000},{name:"넬로 드래곤 B",qty:1,prob:2.0000},
+  {name:"썬더레인 드래곤 SSS",qty:1,prob:0.0100},{name:"썬더레인 드래곤 SS",qty:1,prob:0.1000},{name:"썬더레인 드래곤 S",qty:1,prob:0.5000},
+  {name:"썬더레인 드래곤 A",qty:1,prob:1.5000},{name:"썬더레인 드래곤 B",qty:1,prob:2.0000},
+  {name:"마르바스",qty:1,prob:1.0000},{name:"아실리",qty:1,prob:1.0000},{name:"다로스",qty:1,prob:1.0000},
+  {name:"말로단",qty:1,prob:1.0000},{name:"아라카",qty:1,prob:1.0000},{name:"카르나",qty:1,prob:1.0000},
+  {name:"센투라",qty:1,prob:1.0000},{name:"쿠베라",qty:1,prob:1.0000},{name:"카루라",qty:1,prob:1.0000},
+  {name:"오르도",qty:1,prob:1.0000},{name:"푸투름",qty:1,prob:1.0000},{name:"세크레타",qty:1,prob:1.0000},
+  {name:"달의 정수",qty:30,prob:1.0000},{name:"물의 정수",qty:30,prob:1.0000},{name:"태양의 정수",qty:30,prob:1.0000},
+  {name:"불의 정수",qty:30,prob:1.0000},{name:"땅의 정수",qty:30,prob:1.0000},
+  {name:"정령 고급 뽑기권",qty:1,prob:1.0000},{name:"정령 최고급 뽑기권",qty:1,prob:0.5000},
+  {name:"정령 5성 확정권",qty:1,prob:0.1000},{name:"정령 10+1 뽑기권",qty:1,prob:0.0500},
+  {name:"정령 6성 확정권",qty:1,prob:0.0100},{name:"디바인 스톤",qty:500,prob:1.0000},
+  {name:"다이아",qty:1000,prob:0.1000},{name:"황금 다이아",qty:1000,prob:0.1000},
+  {name:"꿈의 공격 +32",qty:1,prob:1.0000},{name:"꿈의 방어 +32",qty:1,prob:1.0000},{name:"꿈의 체력 +128",qty:1,prob:1.0000},
+  {name:"꿈의 공격 +33",qty:1,prob:0.7500},{name:"꿈의 방어 +33",qty:1,prob:0.7500},{name:"꿈의 체력 +132",qty:1,prob:0.7500},
+  {name:"꿈의 공격 +34",qty:1,prob:0.5000},{name:"꿈의 방어 +34",qty:1,prob:0.5000},{name:"꿈의 체력 +136",qty:1,prob:0.5000},
+  {name:"꿈의 공격 +35",qty:1,prob:0.2500},{name:"꿈의 방어 +35",qty:1,prob:0.2500},{name:"꿈의 체력 +140",qty:1,prob:0.2500},
+  {name:"꿈의 공격 +36",qty:1,prob:0.1000},{name:"꿈의 방어 +36",qty:1,prob:0.1000},{name:"꿈의 체력 +144",qty:1,prob:0.1000},
+  {name:"공격력물약7",qty:10,prob:1.0000},{name:"방어력물약7",qty:10,prob:1.0000},{name:"체력물약7",qty:10,prob:1.0000},
+  {name:"크리물약7",qty:10,prob:1.0000},{name:"회피물약7",qty:10,prob:1.0000},
+  {name:"공격력물약8",qty:10,prob:0.5000},{name:"방어력물약8",qty:10,prob:0.5000},{name:"체력물약8",qty:10,prob:0.5000},
+  {name:"크리물약8",qty:10,prob:0.5000},{name:"회피물약8",qty:10,prob:0.5000},
+  {name:"이계의 수정(옐로우)",qty:100,prob:1.0000},{name:"이계의 수정(레드)",qty:100,prob:1.0000},{name:"이계의 수정(블루)",qty:100,prob:1.0000},
+  {name:"이계의 수정(블랙)",qty:100,prob:1.0000},{name:"이계의 수정(퍼플)",qty:100,prob:1.0000},
+  {name:"꿈의 조각(레드)",qty:15,prob:1.0000},{name:"꿈의 조각(블루)",qty:15,prob:1.0000},{name:"꿈의 조각(옐로우)",qty:15,prob:1.0000},
+  {name:"꿈의 정수(중급)",qty:3,prob:2.5000},{name:"꿈의 정수(상급)",qty:2,prob:2.0000},{name:"꿈의 정수(최상급)",qty:1,prob:1.5000},
+  {name:"강철의 망치",qty:1,prob:3.0000},{name:"마법의 망치",qty:1,prob:2.0000},{name:"디트의 망치",qty:1,prob:1.0000},
+  {name:"꿈의 부화기+1",qty:1,prob:1.0000},{name:"Lv+1",qty:15,prob:1.0000},{name:"캡슐 Lv+1",qty:10,prob:1.0000},
+  {name:"각성 Lv+1",qty:10,prob:1.0000},{name:"프리미엄 레벨업",qty:10,prob:1.0000},{name:"스페셜 레벨업",qty:10,prob:1.0000},
+  {name:"Lv-1",qty:15,prob:1.0000},{name:"초월의 보석",qty:1,prob:1.0000},
+  {name:"초월의 정수(레드)",qty:2,prob:2.2500},{name:"초월의 정수(블루)",qty:2,prob:2.2500},{name:"초월의 정수(옐로)",qty:2,prob:2.2500},
+  {name:"상급 초월의 정수(레드)",qty:1,prob:1.5300},{name:"상급 초월의 정수(블루)",qty:1,prob:1.5300},{name:"상급 초월의 정수(옐로)",qty:1,prob:1.5300},
+  {name:"페르시온 결정",qty:1,prob:1.0000},{name:"종급 강화의 정수",qty:1,prob:1.5000},{name:"상급 강화의 정수",qty:1,prob:0.7000},
+  {name:"최상급 강화의 정수",qty:1,prob:0.5000}
+];
+
+const totalProb = ITEMS.reduce((s,i) => s+i.prob, 0);
+let drawCount = 0;
+let history = [];
+
+function rollOne() {
+  let r = Math.random() * totalProb;
+  let cum = 0;
+  let item = ITEMS[ITEMS.length-1];
+  for (let i of ITEMS) { cum += i.prob; if (r <= cum) { item = i; break; } }
+  return item;
+}
+
+function updateStats() {
+  const cost = Math.floor(drawCount / 10) * 11000;
+  document.getElementById('count').textContent = drawCount + '회';
+  document.getElementById('cost').textContent = cost.toLocaleString() + '원';
+}
+
+function showSpecial(specials) {
+  const el = document.getElementById('special-notice');
+  const body = document.getElementById('special-body');
+  if (specials.length === 0) { el.style.display = 'none'; return; }
+  el.style.display = 'block';
+  body.innerHTML = specials.map(s => `<b>${s.name}</b> — ${s.no}번째 뽑기에서 획득!`).join('<br>');
+}
+
+function drawOne() {
+  const item = rollOne();
+  drawCount++;
+  updateStats();
+  const ra = document.getElementById('result-area');
+  ra.style.justifyContent = 'center';
+  ra.innerHTML = `<div class="result-item-name">${item.name}</div><div class="result-item-qty">수량: ${item.qty}개</div><div class="result-prob">확률: ${item.prob.toFixed(4)}%</div>`;
+  const specials = [];
+  if (item.special) specials.push({name: item.name, no: drawCount});
+  showSpecial(specials);
+  history.unshift({name: item.name, qty: item.qty, no: drawCount});
+  if (history.length > 50) history.pop();
+  renderHistory();
+}
+
+function drawTen() {
+  const results = [];
+  const specials = [];
+  for (let i = 0; i < 10; i++) {
+    const item = rollOne();
+    drawCount++;
+    if (item.special) specials.push({name: item.name, no: drawCount});
+    results.push({item, no: drawCount});
+    history.unshift({name: item.name, qty: item.qty, no: drawCount});
+    if (history.length > 50) history.pop();
+  }
+  updateStats();
+  showSpecial(specials);
+  const ra = document.getElementById('result-area');
+  ra.style.justifyContent = 'flex-start';
+  ra.innerHTML = results.map(r =>
+    `<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid #f0f0ea;">
+      <span style="font-size:14px;font-weight:${r.item.special?'700':'400'};color:${r.item.special?'#b8860b':'#1a1a1a'}">${r.item.special?'✨ ':''}${r.item.name}</span>
+      <span style="font-size:12px;color:#aaa">${r.item.qty}개</span>
+    </div>`
+  ).join('');
+  renderHistory();
+}
+
+function renderHistory() {
+  const el = document.getElementById('history');
+  el.innerHTML = history.map(h => `<div class="history-item"><span><span class="num">#${h.no}</span>${h.name}</span><span>${h.qty}개</span></div>`).join('');
+}
+
+function reset() {
+  drawCount = 0; history = [];
+  document.getElementById('count').textContent = '0회';
+  document.getElementById('cost').textContent = '0원';
+  document.getElementById('result-area').innerHTML = '<span class="result-empty">상자를 눌러 아이템을 뽑아보세요</span>';
+  document.getElementById('result-area').style.justifyContent = 'center';
+  document.getElementById('history').innerHTML = '';
+  document.getElementById('special-notice').style.display = 'none';
+}
+</script>
+</body>
+</html>
