@@ -1,66 +1,232 @@
-
 <!DOCTYPE html>
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>행운의 상자_made by 닉스</title>
+<title>행운의 상자</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Segoe UI', sans-serif; background: #f5f5f0; min-height: 100vh; display: flex; justify-content: center; padding: 2rem 1rem; }
   .wrap { width: 100%; max-width: 520px; }
-  h1 { font-size: 22px; font-weight: 600; color: #1a1a1a; margin-bottom: 1.5rem; text-align: center; }
+  h1 { font-size: 22px; font-weight: 600; color: #1a1a1a; margin-bottom: 1.25rem; text-align: center; }
+  .tab-row { display: flex; margin-bottom: 1.5rem; border: 1px solid #e0e0d8; border-radius: 10px; overflow: hidden; }
+  .tab-btn { flex: 1; padding: 0.7rem; font-size: 13px; font-weight: 600; background: #fff; color: #888; border: none; cursor: pointer; transition: background 0.15s, color 0.15s; }
+  .tab-btn.active { background: #1a1a1a; color: #fff; }
+  .tab-btn:not(.active):hover { background: #f0f0ea; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
   .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1.25rem; }
   .stat-card { background: #fff; border: 1px solid #e0e0d8; border-radius: 10px; padding: 0.75rem 1rem; }
   .stat-label { font-size: 12px; color: #888; margin-bottom: 4px; }
   .stat-value { font-size: 20px; font-weight: 600; color: #1a1a1a; }
   .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1rem; }
-  .box-btn { width: 100%; padding: 1rem; font-size: 18px; font-weight: 600; background: #1a1a1a; color: #fff; border: none; border-radius: 12px; cursor: pointer; transition: background 0.15s, transform 0.1s; }
-  .box-btn.ten { background: #3a3a8a; }
-  .box-btn:hover { background: #333; }
-  .box-btn.ten:hover { background: #4a4aaa; }
+  .box-btn { width: 100%; padding: 1rem; font-size: 18px; font-weight: 600; color: #fff; border: none; border-radius: 12px; cursor: pointer; transition: background 0.15s, transform 0.1s; }
+  .box-btn.one { background: #1a1a1a; } .box-btn.one:hover { background: #333; }
+  .box-btn.ten { background: #3a3a8a; } .box-btn.ten:hover { background: #4a4aaa; }
   .box-btn:active { transform: scale(0.97); }
+  .special-counter { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 1rem; }
+  .counter-badge { background: #fff; border: 1px solid #e0e0d8; border-radius: 8px; padding: 5px 10px; font-size: 11px; color: #888; display: flex; align-items: center; gap: 5px; }
+  .counter-badge .badge-name { color: #555; font-weight: 600; }
+  .counter-badge .badge-count { color: #b8860b; font-weight: 700; font-size: 13px; }
   .special-notice { background: #fff8e1; border: 1px solid #ffe082; border-radius: 10px; padding: 0.75rem 1rem; margin-bottom: 1rem; display: none; }
   .special-notice .special-title { font-size: 13px; font-weight: 600; color: #b8860b; margin-bottom: 4px; }
   .special-notice .special-body { font-size: 13px; color: #7a5c00; }
+  .pickup-notice { background: #fde8ff; border: 1px solid #e8a0ff; border-radius: 10px; padding: 0.75rem 1rem; margin-bottom: 1rem; display: none; }
+  .pickup-notice .pickup-title { font-size: 13px; font-weight: 600; color: #7a00aa; margin-bottom: 4px; }
+  .pickup-notice .pickup-body { font-size: 13px; color: #5a0080; }
   .result-area { min-height: 80px; max-height: 300px; overflow-y: auto; background: #fff; border: 1px solid #e0e0d8; border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 1.25rem; display: flex; flex-direction: column; justify-content: center; gap: 6px; }
   .result-item-name { font-size: 18px; font-weight: 600; color: #1a1a1a; }
-  .result-item-qty { font-size: 13px; color: #666; margin-top: 3px; }
   .result-prob { font-size: 12px; color: #aaa; margin-top: 2px; }
+  .result-item-qty { font-size: 13px; color: #666; margin-top: 3px; }
   .result-empty { font-size: 14px; color: #bbb; }
   .history-title { font-size: 13px; color: #888; margin-bottom: 8px; font-weight: 600; }
-  .history-list { display: flex; flex-direction: column; gap: 0; max-height: 220px; overflow-y: auto; background: #fff; border: 1px solid #e0e0d8; border-radius: 10px; }
+  .history-list { display: flex; flex-direction: column; max-height: 220px; overflow-y: auto; background: #fff; border: 1px solid #e0e0d8; border-radius: 10px; }
   .history-item { font-size: 13px; color: #555; padding: 8px 12px; border-bottom: 1px solid #f0f0ea; display: flex; justify-content: space-between; }
   .history-item:last-child { border-bottom: none; }
   .history-item .num { color: #bbb; margin-right: 6px; }
   .reset-btn { margin-top: 1rem; font-size: 13px; color: #888; background: none; border: 1px solid #ddd; border-radius: 8px; padding: 6px 14px; cursor: pointer; }
   .reset-btn:hover { background: #f0f0ea; }
+  /* 픽업 토글 */
+  .toggle-row { display: flex; align-items: center; gap: 10px; margin-bottom: 1rem; }
+  .toggle-label { font-size: 13px; color: #555; font-weight: 600; }
+  .toggle-wrap { display: flex; background: #f0f0ea; border-radius: 8px; overflow: hidden; border: 1px solid #e0e0d8; }
+  .toggle-opt { padding: 6px 16px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; background: none; color: #888; transition: background 0.15s, color 0.15s; }
+  .toggle-opt.active { background: #1a1a1a; color: #fff; border-radius: 7px; }
+  .mode-badge { font-size: 11px; padding: 3px 8px; border-radius: 6px; font-weight: 600; }
+  .mode-badge.pickup { background: #fde8ff; color: #7a00aa; }
+  .mode-badge.normal { background: #e8f0ff; color: #1a3a8a; }
 </style>
 </head>
 <body>
 <div class="wrap">
   <h1>🎁 행운의 상자</h1>
-  <div class="stats">
-    <div class="stat-card"><div class="stat-label">뽑기 횟수</div><div class="stat-value" id="count">0회</div></div>
-    <div class="stat-card"><div class="stat-label">사용 금액</div><div class="stat-value" id="cost">0원</div></div>
+  <div class="tab-row">
+    <button class="tab-btn active" onclick="switchTab('box')">행운의 상자</button>
+    <button class="tab-btn" onclick="switchTab('pickup')">픽업 뽑기</button>
+    <button class="tab-btn" onclick="switchTab('guild')">길드뽑기</button>
+    <button class="tab-btn" onclick="switchTab('spirit')">정령 뽑기</button>
   </div>
-  <div class="btn-row">
-    <button class="box-btn" onclick="drawOne()">상자 열기 (1회)</button>
-    <button class="box-btn ten" onclick="drawTen()">상자 열기 (10회)</button>
+
+  <!-- 탭1: 행운의 상자 -->
+  <div class="tab-content active" id="tab-box">
+    <div class="stats">
+      <div class="stat-card"><div class="stat-label">뽑기 횟수</div><div class="stat-value" id="b-count">0회</div></div>
+      <div class="stat-card"><div class="stat-label">사용 금액</div><div class="stat-value" id="b-cost">0원</div></div>
+    </div>
+    <div class="btn-row">
+      <button class="box-btn one" onclick="bDrawOne()">상자 열기 (1회)</button>
+      <button class="box-btn ten" onclick="bDrawTen()">상자 열기 (10회)</button>
+    </div>
+    <div class="special-counter" id="b-special-counter" style="display:none;"></div>
+    <div class="special-notice" id="b-special-notice">
+      <div class="special-title">✨ 희귀 아이템 획득!</div>
+      <div class="special-body" id="b-special-body"></div>
+    </div>
+    <div class="result-area" id="b-result-area"><span class="result-empty">상자를 눌러 아이템을 뽑아보세요</span></div>
+    <div class="history-title">최근 뽑기 기록</div>
+    <div class="history-list" id="b-history"></div>
+    <button class="reset-btn" onclick="bReset()">초기화</button>
   </div>
-  <div class="special-notice" id="special-notice">
-    <div class="special-title">✨ 희귀 아이템 획득!</div>
-    <div class="special-body" id="special-body"></div>
+
+  <!-- 탭2: 픽업 뽑기 -->
+  <div class="tab-content" id="tab-pickup">
+    <div class="toggle-row">
+      <span class="toggle-label">뽑기 모드</span>
+      <div class="toggle-wrap">
+        <button class="toggle-opt active" id="toggle-pickup" onclick="setMode('pickup')">픽업</button>
+        <button class="toggle-opt" id="toggle-normal" onclick="setMode('normal')">일반</button>
+      </div>
+      <span class="mode-badge pickup" id="mode-badge">픽업 ON</span>
+    </div>
+    <div class="stats">
+      <div class="stat-card"><div class="stat-label">뽑기 횟수</div><div class="stat-value" id="p-count">0회</div></div>
+      <div class="stat-card"><div class="stat-label">사용 황금 다이아</div><div class="stat-value" id="p-cost">0개</div></div>
+    </div>
+    <div class="btn-row">
+      <button class="box-btn one" onclick="pDrawOne()">뽑기 (1회)</button>
+      <button class="box-btn ten" onclick="pDrawTen()">뽑기 (10회)</button>
+    </div>
+    <div class="special-notice" id="p-special-notice">
+      <div class="special-title">✨ SS 등급 획득!</div>
+      <div class="special-body" id="p-special-body"></div>
+    </div>
+    <div class="pickup-notice" id="p-pickup-notice">
+      <div class="pickup-title">🐉 픽업 드래곤 획득!</div>
+      <div class="pickup-body" id="p-pickup-body"></div>
+    </div>
+    <div class="result-area" id="p-result-area"><span class="result-empty">뽑기 버튼을 눌러보세요</span></div>
+    <div class="history-title">최근 뽑기 기록</div>
+    <div class="history-list" id="p-history"></div>
+    <button class="reset-btn" onclick="pReset()">초기화</button>
   </div>
-  <div class="result-area" id="result-area">
-    <span class="result-empty">상자를 눌러 아이템을 뽑아보세요</span>
+
+  <!-- 탭3: 길드뽑기 -->
+  <div class="tab-content" id="tab-guild">
+    <div class="stats">
+      <div class="stat-card"><div class="stat-label">뽑기 횟수</div><div class="stat-value" id="g-count">0회</div></div>
+      <div class="stat-card"><div class="stat-label">사용 길드 메달</div><div class="stat-value" id="g-cost">0개</div></div>
+    </div>
+    <div class="btn-row">
+      <button class="box-btn one" onclick="gDrawOne()">뽑기 (1회)</button>
+      <button class="box-btn ten" onclick="gDrawTen()">뽑기 (10회)</button>
+    </div>
+    <div class="special-counter" id="g-special-counter" style="display:none;"></div>
+    <div class="special-notice" id="g-special-notice">
+      <div class="special-title">⚔️ 희귀 아이템 획득!</div>
+      <div class="special-body" id="g-special-body"></div>
+    </div>
+    <div class="result-area" id="g-result-area"><span class="result-empty">뽑기 버튼을 눌러보세요</span></div>
+    <div class="history-title">최근 뽑기 기록</div>
+    <div class="history-list" id="g-history"></div>
+    <button class="reset-btn" onclick="gReset()">초기화</button>
   </div>
-  <div class="history-title">최근 뽑기 기록</div>
-  <div class="history-list" id="history"></div>
-  <button class="reset-btn" onclick="reset()">초기화</button>
+
+  <!-- 탭4: 정령 뽑기 -->
+  <div class="tab-content" id="tab-spirit">
+    <div class="toggle-row">
+      <span class="toggle-label">6성 확률업</span>
+      <div class="toggle-wrap">
+        <button class="toggle-opt active" id="toggle-s-off" onclick="setSMode('off')">OFF</button>
+        <button class="toggle-opt" id="toggle-s-on" onclick="setSMode('on')">ON</button>
+      </div>
+      <span class="mode-badge normal" id="s-mode-badge">기본 확률</span>
+    </div>
+    <div class="stats">
+      <div class="stat-card"><div class="stat-label">뽑기 횟수</div><div class="stat-value" id="s-count">0회</div></div>
+      <div class="stat-card"><div class="stat-label">사용 황금 다이아</div><div class="stat-value" id="s-cost">0개</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:1.25rem;">
+      <div class="stat-card" style="text-align:center;">
+        <div class="stat-label" style="color:#cc9900;">⭐⭐⭐⭐⭐⭐ 6성</div>
+        <div class="stat-value" id="s-cnt6" style="color:#cc9900;">0</div>
+      </div>
+      <div class="stat-card" style="text-align:center;">
+        <div class="stat-label" style="color:#009988;">⭐⭐⭐⭐⭐ 5성</div>
+        <div class="stat-value" id="s-cnt5" style="color:#009988;">0</div>
+      </div>
+      <div class="stat-card" style="text-align:center;">
+        <div class="stat-label" style="color:#888;">⭐⭐⭐⭐ 4성</div>
+        <div class="stat-value" id="s-cnt4">0</div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="box-btn one" onclick="sDrawOne()">뽑기 (1회)</button>
+      <button class="box-btn ten" onclick="sDrawTen()">뽑기 (10+1회)</button>
+    </div>
+    <div id="s-result-grid" style="display:none; margin-bottom:1.25rem;"></div>
+    <div class="special-counter" id="s-special-counter" style="display:none;"></div>
+    <div class="special-notice" id="s-special-notice" style="display:none;">
+      <div class="special-title" id="s-special-title"></div>
+      <div class="special-body" id="s-special-body"></div>
+    </div>
+    <div class="result-area" id="s-result-area"><span class="result-empty">뽑기 버튼을 눌러보세요</span></div>
+    <div class="history-title">최근 뽑기 기록</div>
+    <div class="history-list" id="s-history"></div>
+    <button class="reset-btn" onclick="sReset()">초기화</button>
+  </div>
+
+  <!-- 정령 상세 모달 -->
+  <div id="spirit-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:999;align-items:center;justify-content:center;" onclick="closeModal()">
+    <div id="spirit-modal-inner" style="background:#fff;border-radius:16px;padding:1.5rem 1.25rem;max-width:280px;width:90%;text-align:center;position:relative;" onclick="event.stopPropagation()">
+      <div id="modal-stars" style="font-size:20px;margin-bottom:8px;"></div>
+      <div id="modal-icon" style="width:80px;height:80px;border-radius:12px;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:32px;"></div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:4px;">
+        <div id="modal-name" style="font-size:18px;font-weight:600;color:#1a1a1a;"></div>
+        <div id="modal-bonus" style="font-size:11px;font-weight:600;background:#f0f0e8;border:1px solid #d0d0c0;border-radius:6px;padding:2px 7px;color:#555;"></div>
+      </div>
+      <div id="modal-badge" style="margin-bottom:8px;"></div>
+      <div id="modal-options" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;"></div>
+      <button onclick="closeModal()" style="margin-top:1rem;width:100%;padding:0.6rem;background:#1a1a1a;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">닫기</button>
+    </div>
+  </div>
 </div>
 
+<style>
+  .spirit-card { border-radius:12px; padding:0.75rem 0.5rem; text-align:center; cursor:pointer; transition:transform 0.15s; border:2px solid transparent; }
+  .spirit-card:hover { transform:scale(1.05); }
+  .spirit-card.grade-4 { background:#d0d0c8; border-color:#a0a098; }
+  .spirit-card.grade-5 { background:#b0e8e0; border-color:#40c0b0; }
+  .spirit-card.grade-6 { background:#ffe066; border-color:#e8b800; }
+  .spirit-card .s-icon { font-size:28px; margin-bottom:4px; }
+  .spirit-card .s-name { font-size:11px; font-weight:600; color:#1a1a1a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .spirit-card .s-stars { font-size:10px; margin-bottom:2px; }
+  .opt-pill { border-radius:8px; padding:5px 8px; font-size:12px; font-weight:600; display:flex; align-items:center; gap:4px; }
+  .opt-pill.atk { background:#ffe0e0; color:#c00; }
+  .opt-pill.def { background:#e0e8ff; color:#005; }
+  .opt-pill.hp { background:#e0ffe0; color:#060; }
+</style>
+
 <script>
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active',
+    (i===0&&tab==='box')||(i===1&&tab==='pickup')||(i===2&&tab==='guild')||(i===3&&tab==='spirit')));
+  document.getElementById('tab-box').classList.toggle('active', tab==='box');
+  document.getElementById('tab-pickup').classList.toggle('active', tab==='pickup');
+  document.getElementById('tab-guild').classList.toggle('active', tab==='guild');
+  document.getElementById('tab-spirit').classList.toggle('active', tab==='spirit');
+}
+
+/* ===== 탭1: 행운의 상자 ===== */
 const ITEMS = [
   {name:"블라드",qty:1,prob:0.0500,special:true},{name:"마누스",qty:1,prob:0.0500,special:true},{name:"마누스 장식",qty:1,prob:0.1000,special:true},
   {name:"더블 맥스 Lv+1",qty:3,prob:0.3000},{name:"더블 맥스 Lv+1",qty:5,prob:0.1500},
@@ -107,85 +273,560 @@ const ITEMS = [
   {name:"페르시온 결정",qty:1,prob:1.0000},{name:"종급 강화의 정수",qty:1,prob:1.5000},{name:"상급 강화의 정수",qty:1,prob:0.7000},
   {name:"최상급 강화의 정수",qty:1,prob:0.5000}
 ];
+const bTP = ITEMS.reduce((s,i)=>s+i.prob,0);
+let bCnt=0, bHist=[];
+const bSC = {"블라드":0,"마누스":0,"마누스 장식":0,"커스리퍼":0};
+function bRoll(){let r=Math.random()*bTP,c=0,item=ITEMS[ITEMS.length-1];for(let i of ITEMS){c+=i.prob;if(r<=c){item=i;break;}}return item;}
+function bStats(){document.getElementById('b-count').textContent=bCnt+'회';document.getElementById('b-cost').textContent=(Math.floor(bCnt/10)*12000).toLocaleString()+'원';}
+function bCounter(){const el=document.getElementById('b-special-counter');const has=Object.values(bSC).some(v=>v>0);if(!has){el.style.display='none';return;}el.style.display='flex';el.innerHTML=Object.entries(bSC).map(([n,c])=>`<div class="counter-badge"><span class="badge-name">${n}</span><span style="color:#bbb;font-size:11px;">총</span><span class="badge-count">${c}회</span></div>`).join('');}
+function bSpecial(sp){const el=document.getElementById('b-special-notice');sp.forEach(s=>{if(s.name in bSC)bSC[s.name]++;});bCounter();if(!sp.length){el.style.display='none';return;}el.style.display='block';document.getElementById('b-special-body').innerHTML=sp.map(s=>`<b>${s.name}</b> — ${s.no}번째 뽑기에서 획득!`).join('<br>');}
+function bDrawOne(){const item=bRoll();bCnt++;bStats();const ra=document.getElementById('b-result-area');ra.style.justifyContent='center';ra.innerHTML=`<div class="result-item-name">${item.name}</div><div class="result-item-qty">수량: ${item.qty}개</div><div class="result-prob">확률: ${item.prob.toFixed(4)}%</div>`;const sp=[];if(item.special)sp.push({name:item.name,no:bCnt});bSpecial(sp);bHist.unshift({name:item.name,qty:item.qty,no:bCnt});if(bHist.length>50)bHist.pop();bRH();}
+function bDrawTen(){const res=[],sp=[];for(let i=0;i<10;i++){const item=bRoll();bCnt++;if(item.special)sp.push({name:item.name,no:bCnt});res.push({item,no:bCnt});bHist.unshift({name:item.name,qty:item.qty,no:bCnt});if(bHist.length>50)bHist.pop();}bStats();bSpecial(sp);const ra=document.getElementById('b-result-area');ra.style.justifyContent='flex-start';ra.innerHTML=res.map(r=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid #f0f0ea;"><span style="font-size:14px;font-weight:${r.item.special?'700':'400'};color:${r.item.special?'#b8860b':'#1a1a1a'}">${r.item.special?'✨ ':''}${r.item.name}</span><span style="font-size:12px;color:#aaa">${r.item.qty}개</span></div>`).join('');bRH();}
+function bRH(){document.getElementById('b-history').innerHTML=bHist.map(h=>`<div class="history-item"><span><span class="num">#${h.no}</span>${h.name}</span><span>${h.qty}개</span></div>`).join('');}
+function bReset(){bCnt=0;bHist=[];Object.keys(bSC).forEach(k=>bSC[k]=0);document.getElementById('b-count').textContent='0회';document.getElementById('b-cost').textContent='0원';document.getElementById('b-result-area').innerHTML='<span class="result-empty">상자를 눌러 아이템을 뽑아보세요</span>';document.getElementById('b-result-area').style.justifyContent='center';document.getElementById('b-history').innerHTML='';document.getElementById('b-special-notice').style.display='none';document.getElementById('b-special-counter').style.display='none';}
 
-const totalProb = ITEMS.reduce((s,i) => s+i.prob, 0);
-let drawCount = 0;
-let history = [];
+/* ===== 탭2: 픽업 뽑기 ===== */
+let pMode = 'pickup'; // 'pickup' or 'normal'
+function setMode(m) {
+  if (pMode === m) return;
+  pMode = m;
+  document.getElementById('toggle-pickup').classList.toggle('active', m==='pickup');
+  document.getElementById('toggle-normal').classList.toggle('active', m==='normal');
+  const badge = document.getElementById('mode-badge');
+  if (m==='pickup') { badge.textContent='픽업 ON'; badge.className='mode-badge pickup'; }
+  else { badge.textContent='일반 뽑기'; badge.className='mode-badge normal'; }
+  pReset();
+}
 
-function rollOne() {
-  let r = Math.random() * totalProb;
-  let cum = 0;
-  let item = ITEMS[ITEMS.length-1];
-  for (let i of ITEMS) { cum += i.prob; if (r <= cum) { item = i; break; } }
+/* 픽업 배열 */
+const PICKUP = [
+  {name:"조화룡",prob:1.00935,grade:"pickup"},
+  {name:"라스",prob:0.14953,grade:"ss"},{name:"롱기누스",prob:0.14953,grade:"ss"},{name:"프로즌",prob:0.14953,grade:"ss"},
+  {name:"알데바란",prob:0.14953,grade:"ss"},{name:"개틀링곤",prob:0.14953,grade:"ss"},{name:"시타엘",prob:0.14953,grade:"ss"},
+  {name:"이클립스",prob:0.14953,grade:"ss"},{name:"바알",prob:0.14953,grade:"ss"},{name:"아르고 드래곤",prob:0.14953,grade:"ss"},
+  {name:"크레바스",prob:0.14953,grade:"ss"},{name:"타나토스",prob:0.14953,grade:"ss"},{name:"아만타",prob:0.14953,grade:"ss"},
+  {name:"염화룡",prob:0.14953,grade:"ss"},{name:"티르",prob:0.14953,grade:"ss"},{name:"마소티스",prob:0.14953,grade:"ss"},
+  {name:"보레아스",prob:0.14953,grade:"ss"},{name:"라파엘",prob:0.14953,grade:"ss"},{name:"파이션",prob:0.14953,grade:"ss"},
+  {name:"루미네스",prob:0.14953,grade:"ss"},{name:"번네스",prob:0.14953,grade:"ss"},{name:"기간티스",prob:0.14953,grade:"ss"},
+  {name:"가이안",prob:0.14953,grade:"ss"},{name:"마르바스",prob:0.14953,grade:"ss"},{name:"아스티",prob:0.14953,grade:"ss"},
+  {name:"말로단",prob:0.14953,grade:"ss"},{name:"카르나",prob:0.14953,grade:"ss"},{name:"카루라",prob:0.14953,grade:"ss"},
+  {name:"센투라",prob:0.14953,grade:"ss"},{name:"마카라",prob:0.14953,grade:"ss"},{name:"일리오스 S",prob:0.14953,grade:"ss"},
+  {name:"아실리",prob:0.14953,grade:"ss"},{name:"가루나",prob:0.14953,grade:"ss"},{name:"루가르 드래곤",prob:0.14953,grade:"ss"},
+  {name:"다로스",prob:0.14953,grade:"ss"},{name:"아라카",prob:0.14953,grade:"ss"},{name:"베르나",prob:0.14953,grade:"ss"},
+  {name:"쿠베라",prob:0.14953,grade:"ss"},{name:"브리트라",prob:0.14953,grade:"ss"},{name:"킨더 드래곤",prob:0.14953,grade:"ss"},
+  {name:"미나스 드래곤",prob:0.14953,grade:"ss"},{name:"키갈",prob:0.14953,grade:"ss"},{name:"엔투라스",prob:0.14953,grade:"ss"},
+  {name:"카오스",prob:0.14953,grade:"ss"},{name:"스워드",prob:0.14953,grade:"ss"},{name:"미미르",prob:0.14953,grade:"ss"},
+  {name:"베론하르트",prob:0.14953,grade:"ss"},{name:"네무스",prob:0.14953,grade:"ss"},{name:"피타야",prob:0.14953,grade:"ss"},
+  {name:"에트왈 드래곤",prob:0.14953,grade:"ss"},{name:"수라 드래곤",prob:0.14953,grade:"ss"},{name:"므네이아",prob:0.14953,grade:"ss"},
+  {name:"엠파이어",prob:0.14953,grade:"ss"},{name:"스칼렛",prob:0.14953,grade:"ss"},{name:"화귀 드래곤",prob:0.14953,grade:"ss"},
+  {name:"토트",prob:0.14953,grade:"ss"},{name:"파키",prob:0.14953,grade:"ss"},
+  {name:"아이언 드래곤",prob:1.34579,grade:"ss"},{name:"스파이시",prob:1.34579,grade:"s"},{name:"오로",prob:1.34579,grade:"ss"},
+  {name:"시그마 드래곤",prob:1.34579,grade:"ss"},{name:"데모니오",prob:1.34579,grade:"s"},{name:"오쿠러스",prob:1.34579,grade:"s"},
+  {name:"칸",prob:1.34579,grade:"s"},{name:"지마",prob:1.34579,grade:"s"},{name:"아이가스",prob:1.34579,grade:"s"},
+  {name:"아르주나",prob:1.34579,grade:"s"},{name:"록소린",prob:1.34579,grade:"s"},{name:"칼라빈카",prob:1.34579,grade:"s"},
+  {name:"타크사카",prob:1.34579,grade:"s"},{name:"녹스S",prob:1.34579,grade:"s"},{name:"옵타툽",prob:1.34579,grade:"s"},
+  {name:"리베라",prob:1.34579,grade:"s"},{name:"발라",prob:1.34579,grade:"s"},{name:"자루카",prob:1.34579,grade:"s"},
+  {name:"라지카스",prob:1.34579,grade:"s"},{name:"타이게타",prob:1.34579,grade:"s"},{name:"간다르바",prob:1.34579,grade:"s"},
+  {name:"아프리트",prob:1.34579,grade:"s"},{name:"지타쿨라",prob:1.34579,grade:"s"},{name:"쿠즈마라",prob:1.34579,grade:"s"},
+  {name:"시리스",prob:1.34579,grade:"s"},
+  {name:"칼리시 S",prob:0.89720,grade:"n"},{name:"크로마 칼리시 S",prob:0.89720,grade:"n"},{name:"다르누스 S",prob:0.89720,grade:"n"},
+  {name:"페트로아 S",prob:0.89720,grade:"n"},{name:"케이나인 S",prob:0.89720,grade:"n"},{name:"아비스 S",prob:0.89720,grade:"n"},
+  {name:"차콜플레임 S",prob:0.89720,grade:"n"},{name:"앙그라 S",prob:0.89720,grade:"n"},{name:"미트라 S",prob:0.89720,grade:"n"},
+  {name:"아누라다 S",prob:0.89720,grade:"n"},{name:"아그나드 S",prob:0.89720,grade:"n"},{name:"버블 드래곤 S",prob:0.89720,grade:"n"},
+  {name:"레블롭틴 S",prob:0.89720,grade:"n"},{name:"아쿠아리움 S",prob:0.89720,grade:"n"},{name:"얼티밋 드래곤 S",prob:0.89720,grade:"n"},
+  {name:"매직스타 드래곤 S",prob:0.89720,grade:"n"},{name:"페르마타 S",prob:0.89720,grade:"n"},{name:"유리온 S",prob:0.89720,grade:"n"},
+  {name:"터들톰톰 S",prob:0.89720,grade:"n"},{name:"선인장 드래곤 S",prob:0.89720,grade:"n"},{name:"그랑 세이버 S",prob:0.89720,grade:"n"},
+  {name:"푸딩곤 S",prob:0.89720,grade:"n"},{name:"넬로 드래곤 S",prob:0.89720,grade:"n"},{name:"썬더레인 드래곤 S",prob:0.89720,grade:"n"},
+  {name:"아델라 S",prob:0.89720,grade:"n"},{name:"슬리즈 드래곤 S",prob:0.89720,grade:"n"},{name:"타로스 S",prob:0.89720,grade:"n"},
+  {name:"익시아 S",prob:0.89720,grade:"n"},{name:"살롯 S",prob:0.89720,grade:"n"},{name:"이지스 S",prob:0.89720,grade:"n"},
+  {name:"헤카테 S",prob:0.89720,grade:"n"},{name:"밀라 S",prob:0.89720,grade:"n"},{name:"로티스 S",prob:0.89720,grade:"n"},
+  {name:"스노우볼 S",prob:0.89720,grade:"n"},{name:"코멧 S",prob:0.89720,grade:"n"},{name:"화이트 디스트로이어 S",prob:0.89720,grade:"n"},
+  {name:"인스트리아 S",prob:0.89720,grade:"n"},{name:"크로마 인스트리아 S",prob:0.89720,grade:"n"},
+  {name:"베네보렌티아 S",prob:0.89720,grade:"n"},{name:"크로마 베네보렌티아 S",prob:0.89720,grade:"n"},
+  {name:"뇌신 S",prob:0.89720,grade:"n"},{name:"크로마 뇌신 S",prob:0.89720,grade:"n"},{name:"타라 S",prob:0.89720,grade:"n"},
+  {name:"호저리 S",prob:0.89720,grade:"n"},{name:"구미호 S",prob:0.89720,grade:"n"},{name:"루송 S",prob:0.89720,grade:"n"},
+  {name:"아바돈 S",prob:0.89720,grade:"n"},{name:"큐아네드 S",prob:0.89720,grade:"n"},
+  {name:"칼리시 SS",prob:0.29907,grade:"n"},{name:"크로마 칼리시 SS",prob:0.29907,grade:"n"},{name:"다르누스 SS",prob:0.29907,grade:"n"},
+  {name:"페트로아 SS",prob:0.29907,grade:"n"},{name:"케이나인 SS",prob:0.29907,grade:"n"},{name:"아비스 SS",prob:0.29907,grade:"n"},
+  {name:"차콜플레임 SS",prob:0.29907,grade:"n"},{name:"앙그라 SS",prob:0.29907,grade:"n"},{name:"미트라 SS",prob:0.29907,grade:"n"},
+  {name:"아그나드 SS",prob:0.29907,grade:"n"},{name:"버블 드래곤 SS",prob:0.29907,grade:"n"},{name:"레블롭틴 SS",prob:0.29907,grade:"n"},
+  {name:"아쿠아리움 SS",prob:0.29907,grade:"n"},{name:"얼티밋 드래곤 SS",prob:0.29907,grade:"n"},{name:"매직스타 드래곤 SS",prob:0.29907,grade:"n"},
+  {name:"페르마타 SS",prob:0.29907,grade:"n"},{name:"유리온 SS",prob:0.29907,grade:"n"},{name:"터들톰톰 SS",prob:0.29907,grade:"n"},
+  {name:"선인장 드래곤 SS",prob:0.29907,grade:"n"},{name:"그랑 세이버 SS",prob:0.29907,grade:"n"},{name:"넬로 드래곤 SS",prob:0.29907,grade:"n"},
+  {name:"썬더레인 드래곤 SS",prob:0.29907,grade:"n"},{name:"아델라 SS",prob:0.29907,grade:"n"},{name:"슬리즈 드래곤 SS",prob:0.29907,grade:"n"},
+  {name:"타로스 SS",prob:0.29907,grade:"n"},{name:"익시아 SS",prob:0.29907,grade:"n"},{name:"살롯 SS",prob:0.29907,grade:"n"},
+  {name:"이지스 SS",prob:0.29907,grade:"n"},{name:"헤카테 SS",prob:0.29907,grade:"n"},{name:"밀라 SS",prob:0.29907,grade:"n"},
+  {name:"아누라다 SS",prob:0.29907,grade:"n"},{name:"로티스 SS",prob:0.29907,grade:"n"},{name:"인스트리아 SS",prob:0.29907,grade:"n"},
+  {name:"크로마 인스트리아 SS",prob:0.29907,grade:"n"},{name:"베네보렌티아 SS",prob:0.29907,grade:"n"},
+  {name:"크로마 베네보렌티아 SS",prob:0.29907,grade:"n"},{name:"뇌신 SS",prob:0.29907,grade:"n"},{name:"크로마 뇌신 SS",prob:0.29907,grade:"n"},
+  {name:"타라 SS",prob:0.29907,grade:"n"},{name:"구미호 SS",prob:0.29907,grade:"n"},{name:"루송 SS",prob:0.29907,grade:"n"},
+  {name:"아바돈 SS",prob:0.29907,grade:"n"},{name:"큐아네드 SS",prob:0.29907,grade:"n"},{name:"호저리 SS",prob:0.29907,grade:"n"},
+  {name:"코멧 SS",prob:0.14953,grade:"n"},{name:"스노우볼 SS",prob:0.14953,grade:"n"},{name:"화이트 디스트로이어 SS",prob:0.14953,grade:"n"}
+];
+
+/* 일반 뽑기 배열 (픽업 OFF) */
+const NORMAL = [
+  {name:"케이나인 S",prob:0.90498,grade:"n"},{name:"아비스 S",prob:0.90498,grade:"n"},{name:"차콜플레임 S",prob:0.90498,grade:"n"},
+  {name:"케이나인 SS",prob:0.30166,grade:"n"},{name:"아비스 SS",prob:0.30166,grade:"n"},{name:"차콜플레임 SS",prob:0.30166,grade:"n"},
+  {name:"프로즌",prob:0.15083,grade:"ss"},{name:"알데바란",prob:0.15083,grade:"ss"},{name:"개틀링곤",prob:0.15083,grade:"ss"},
+  {name:"시타엘",prob:0.15083,grade:"ss"},{name:"이클립스",prob:0.15083,grade:"ss"},{name:"바알",prob:0.15083,grade:"ss"},
+  {name:"아르고 드래곤",prob:0.15083,grade:"ss"},{name:"염화룡",prob:0.15083,grade:"ss"},{name:"티르",prob:0.15083,grade:"ss"},
+  {name:"마소티스",prob:0.15083,grade:"ss"},{name:"보레아스",prob:0.15083,grade:"ss"},{name:"라파엘",prob:0.15083,grade:"ss"},
+  {name:"파이션",prob:0.15083,grade:"ss"},{name:"루미네스",prob:0.15083,grade:"ss"},{name:"번네스",prob:0.15083,grade:"ss"},
+  {name:"기간티스",prob:0.15083,grade:"ss"},{name:"가이안",prob:0.15083,grade:"ss"},{name:"마르바스",prob:0.15083,grade:"ss"},
+  {name:"아스티",prob:0.15083,grade:"ss"},{name:"말로단",prob:0.15083,grade:"ss"},{name:"카르나",prob:0.15083,grade:"ss"},
+  {name:"앙그라 SS",prob:0.30166,grade:"n"},{name:"미트라 SS",prob:0.30166,grade:"n"},{name:"카루라",prob:0.15083,grade:"ss"},
+  {name:"센투라",prob:0.15083,grade:"ss"},{name:"마카라",prob:0.15083,grade:"ss"},{name:"일리오스 S",prob:0.15083,grade:"ss"},
+  {name:"아실리",prob:0.15083,grade:"ss"},{name:"가루나",prob:0.15083,grade:"ss"},{name:"루가르 드래곤",prob:0.15083,grade:"ss"},
+  {name:"다로스",prob:0.15083,grade:"ss"},{name:"아라카",prob:0.15083,grade:"ss"},{name:"앙그라 S",prob:0.90498,grade:"n"},
+  {name:"미트라 S",prob:0.90498,grade:"n"},{name:"베르나",prob:0.15083,grade:"ss"},{name:"쿠베라",prob:0.15083,grade:"ss"},
+  {name:"브리트라",prob:0.15083,grade:"ss"},{name:"킨더 드래곤",prob:0.15083,grade:"ss"},{name:"미나스 드래곤",prob:0.15083,grade:"ss"},
+  {name:"키갈",prob:0.15083,grade:"ss"},{name:"엔투라스",prob:0.15083,grade:"ss"},{name:"카오스",prob:0.15083,grade:"ss"},
+  {name:"스워드",prob:0.15083,grade:"ss"},{name:"스파이시",prob:1.35747,grade:"s"},{name:"오로",prob:1.35747,grade:"ss"},
+  {name:"녹스S",prob:1.35747,grade:"s"},{name:"아이언 드래곤",prob:1.35747,grade:"ss"},{name:"시그마 드래곤",prob:1.35747,grade:"ss"},
+  {name:"데모니오",prob:1.35747,grade:"s"},{name:"옵타툽",prob:1.35747,grade:"s"},{name:"리베라",prob:1.35747,grade:"s"},
+  {name:"발라",prob:1.35747,grade:"s"},{name:"자루카",prob:1.35747,grade:"s"},{name:"라지카스",prob:1.35747,grade:"s"},
+  {name:"타이게타",prob:1.35747,grade:"s"},{name:"간다르바",prob:1.35747,grade:"s"},{name:"아프리트",prob:1.35747,grade:"s"},
+  {name:"지타쿨라",prob:1.35747,grade:"s"},{name:"쿠즈마라",prob:1.35747,grade:"s"},{name:"시리스",prob:1.35747,grade:"s"},
+  {name:"아누라다 S",prob:0.90498,grade:"n"},{name:"아그나드 S",prob:0.90498,grade:"n"},{name:"버블 드래곤 S",prob:0.90498,grade:"n"},
+  {name:"레블롭틴 S",prob:0.90498,grade:"n"},{name:"아쿠아리움 S",prob:0.90498,grade:"n"},{name:"얼티밋 드래곤 S",prob:0.90498,grade:"n"},
+  {name:"매직스타 드래곤 S",prob:0.90498,grade:"n"},{name:"페르마타 S",prob:0.90498,grade:"n"},{name:"유리온 S",prob:0.90498,grade:"n"},
+  {name:"터들톰톰 S",prob:0.90498,grade:"n"},{name:"선인장 드래곤 S",prob:0.90498,grade:"n"},{name:"그랑 세이버 S",prob:0.90498,grade:"n"},
+  {name:"푸딩곤 S",prob:0.90498,grade:"n"},{name:"넬로 드래곤 S",prob:0.90498,grade:"n"},{name:"썬더레인 드래곤 S",prob:0.90498,grade:"n"},
+  {name:"아델라 S",prob:0.90498,grade:"n"},{name:"슬리즈 드래곤 S",prob:0.90498,grade:"n"},{name:"타로스 S",prob:0.90498,grade:"n"},
+  {name:"익시아 S",prob:0.90498,grade:"n"},{name:"살롯 S",prob:0.90498,grade:"n"},{name:"이지스 S",prob:0.90498,grade:"n"},
+  {name:"아그나드 SS",prob:0.30166,grade:"n"},{name:"버블 드래곤 SS",prob:0.30166,grade:"n"},{name:"레블롭틴 SS",prob:0.30166,grade:"n"},
+  {name:"아쿠아리움 SS",prob:0.30166,grade:"n"},{name:"얼티밋 드래곤 SS",prob:0.30166,grade:"n"},{name:"매직스타 드래곤 SS",prob:0.30166,grade:"n"},
+  {name:"페르마타 SS",prob:0.30166,grade:"n"},{name:"유리온 SS",prob:0.30166,grade:"n"},{name:"터들톰톰 SS",prob:0.30166,grade:"n"},
+  {name:"선인장 드래곤 SS",prob:0.30166,grade:"n"},{name:"그랑 세이버 SS",prob:0.30166,grade:"n"},{name:"넬로 드래곤 SS",prob:0.30166,grade:"n"},
+  {name:"썬더레인 드래곤 SS",prob:0.30166,grade:"n"},{name:"아델라 SS",prob:0.30166,grade:"n"},{name:"슬리즈 드래곤 SS",prob:0.30166,grade:"n"},
+  {name:"타로스 SS",prob:0.30166,grade:"n"},{name:"익시아 SS",prob:0.30166,grade:"n"},{name:"살롯 SS",prob:0.30166,grade:"n"},
+  {name:"이지스 SS",prob:0.30166,grade:"n"},{name:"미미르",prob:0.15083,grade:"ss"},{name:"헤카테 S",prob:0.90498,grade:"n"},
+  {name:"밀라 S",prob:0.90498,grade:"n"},{name:"로티스 S",prob:0.90498,grade:"n"},{name:"스노우볼 S",prob:0.90498,grade:"n"},
+  {name:"베론하르트",prob:0.15083,grade:"ss"},{name:"아만타",prob:0.15083,grade:"ss"},{name:"코멧 S",prob:0.90498,grade:"n"},
+  {name:"화이트 디스트로이어 S",prob:0.90498,grade:"n"},{name:"아누라다 SS",prob:0.30166,grade:"n"},{name:"다르누스 S",prob:0.90498,grade:"n"},
+  {name:"헤카테 SS",prob:0.30166,grade:"n"},{name:"밀라 SS",prob:0.30166,grade:"n"},{name:"로티스 SS",prob:0.30166,grade:"n"},
+  {name:"스노우볼 SS",prob:0.30166,grade:"n"},{name:"페트로아 S",prob:0.90498,grade:"n"},{name:"타나토스",prob:0.15083,grade:"ss"},
+  {name:"칼리시 SS",prob:0.90498,grade:"n"},{name:"크로마 칼리시 S",prob:0.90498,grade:"n"},{name:"크로마 칼리시 SS",prob:0.30166,grade:"n"},
+  {name:"인스트리아 SS",prob:0.30166,grade:"n"},{name:"크로마 인스트리아 S",prob:0.90498,grade:"n"},{name:"토트",prob:0.15083,grade:"ss"},
+  {name:"베네보렌티아 S",prob:0.90498,grade:"n"},{name:"크로마 베네보렌티아 S",prob:0.90498,grade:"n"},{name:"크레바스",prob:0.15083,grade:"ss"},
+  {name:"네무스",prob:0.15083,grade:"ss"},{name:"베네보렌티아 SS",prob:0.30166,grade:"n"},{name:"크로마 베네보렌티아 SS",prob:0.30166,grade:"n"},
+  {name:"뇌신 S",prob:0.90498,grade:"n"},{name:"뇌신 SS",prob:0.30166,grade:"n"},{name:"크로마 뇌신 S",prob:0.90498,grade:"n"},
+  {name:"파키",prob:0.15083,grade:"ss"},{name:"타라 S",prob:0.90498,grade:"n"},{name:"호저리 S",prob:0.90498,grade:"n"},
+  {name:"피타야",prob:0.15083,grade:"ss"},{name:"구미호 S",prob:0.90498,grade:"n"},{name:"구미호 SS",prob:0.30166,grade:"n"},
+  {name:"루송 S",prob:0.90498,grade:"n"},{name:"루송 SS",prob:0.30166,grade:"n"},{name:"조화룡",prob:0.15083,grade:"ss"},
+  {name:"아바돈 S",prob:0.90498,grade:"n"},{name:"아바돈 SS",prob:0.30166,grade:"n"},{name:"큐아네드 S",prob:0.90498,grade:"n"},
+  {name:"큐아네드 SS",prob:0.30166,grade:"n"},{name:"크로마 뇌신 SS",prob:0.30166,grade:"n"},{name:"타라 SS",prob:0.30166,grade:"n"},
+  {name:"호저리 SS",prob:0.30166,grade:"n"},{name:"롱기누스",prob:0.15083,grade:"ss"},{name:"에트왈 드래곤",prob:0.15083,grade:"ss"},
+  {name:"수라 드래곤",prob:0.15083,grade:"ss"},{name:"므네이아",prob:0.15083,grade:"ss"},{name:"엠파이어",prob:0.15083,grade:"ss"},
+  {name:"스칼렛",prob:0.15083,grade:"ss"},{name:"화귀 드래곤",prob:0.15083,grade:"ss"},{name:"오쿠러스",prob:1.35747,grade:"s"},
+  {name:"칸",prob:1.35747,grade:"s"},{name:"지마",prob:1.35747,grade:"s"},{name:"아이가스",prob:1.35747,grade:"s"},
+  {name:"아르주나",prob:1.35747,grade:"s"},{name:"록소린",prob:1.35747,grade:"s"},{name:"칼라빈카",prob:1.35747,grade:"s"},
+  {name:"타크사카",prob:1.35747,grade:"s"},{name:"인스트리아 S",prob:0.90498,grade:"n"},{name:"크로마 인스트리아 SS",prob:0.30166,grade:"n"},
+  {name:"코멧 SS",prob:0.15083,grade:"n"},{name:"화이트 디스트로이어 SS",prob:0.15083,grade:"n"},{name:"다르누스 SS",prob:0.30166,grade:"n"},
+  {name:"페트로아 SS",prob:0.30166,grade:"n"},{name:"라스",prob:0.15083,grade:"ss"}
+];
+
+const pTP_pickup = PICKUP.reduce((s,i)=>s+i.prob,0);
+const pTP_normal = NORMAL.reduce((s,i)=>s+i.prob,0);
+let pCnt=0, pHist=[];
+
+function pColor(g){return g==='ss'?'#7c3aed':g==='s'?'#1d6fd4':g==='pickup'?'#b8860b':'#1a1a1a';}
+function pLabel(g){
+  if(g==='pickup') return ' [P]';
+  if(g==='ss') return ' [SS]';
+  if(g==='s') return ' [S]';
+  return '';
+}
+function pRoll(){
+  const pool = pMode==='pickup' ? PICKUP : NORMAL;
+  const tp = pMode==='pickup' ? pTP_pickup : pTP_normal;
+  let r=Math.random()*tp,c=0,item=pool[pool.length-1];
+  for(let i of pool){c+=i.prob;if(r<=c){item=i;break;}}
   return item;
 }
-
-function updateStats() {
-  const cost = Math.floor(drawCount / 10) * 12000;
-  document.getElementById('count').textContent = drawCount + '회';
-  document.getElementById('cost').textContent = cost.toLocaleString() + '원';
+function pStats(){document.getElementById('p-count').textContent=pCnt+'회';document.getElementById('p-cost').textContent=(pCnt*100).toLocaleString()+'개';}
+function pHandleResults(results){
+  const ssItems = results.filter(r=>r.item.grade==='ss');
+  const pickupItems = results.filter(r=>r.item.grade==='pickup');
+  const snotice = document.getElementById('p-special-notice');
+  if(ssItems.length){
+    snotice.style.display='block';
+    document.getElementById('p-special-body').innerHTML = ssItems.map(r=>`<b>${r.item.name}</b> — ${r.no}번째 뽑기에서 획득!`).join('<br>');
+  } else { snotice.style.display='none'; }
+  const pnotice = document.getElementById('p-pickup-notice');
+  if(pickupItems.length){
+    pnotice.style.display='block';
+    document.getElementById('p-pickup-body').innerHTML = pickupItems.map(r=>`<b>${r.item.name}</b> — ${r.no}번째 뽑기에서 픽업 획득!`).join('<br>');
+  } else { pnotice.style.display='none'; }
 }
-
-function showSpecial(specials) {
-  const el = document.getElementById('special-notice');
-  const body = document.getElementById('special-body');
-  if (specials.length === 0) { el.style.display = 'none'; return; }
-  el.style.display = 'block';
-  body.innerHTML = specials.map(s => `<b>${s.name}</b> — ${s.no}번째 뽑기에서 획득!`).join('<br>');
+function pDrawOne(){
+  const item=pRoll();pCnt++;pStats();
+  const ra=document.getElementById('p-result-area');
+  ra.style.justifyContent='center';
+  ra.innerHTML=`<div class="result-item-name" style="color:${pColor(item.grade)}">${item.name}${pLabel(item.grade)}</div><div class="result-prob">확률: ${item.prob.toFixed(5)}%</div>`;
+  pHandleResults([{item,no:pCnt}]);
+  pHist.unshift({name:item.name,grade:item.grade,no:pCnt});
+  if(pHist.length>50)pHist.pop();pRH();
 }
-
-function drawOne() {
-  const item = rollOne();
-  drawCount++;
-  updateStats();
-  const ra = document.getElementById('result-area');
-  ra.style.justifyContent = 'center';
-  ra.innerHTML = `<div class="result-item-name">${item.name}</div><div class="result-item-qty">수량: ${item.qty}개</div><div class="result-prob">확률: ${item.prob.toFixed(4)}%</div>`;
-  const specials = [];
-  if (item.special) specials.push({name: item.name, no: drawCount});
-  showSpecial(specials);
-  history.unshift({name: item.name, qty: item.qty, no: drawCount});
-  if (history.length > 50) history.pop();
-  renderHistory();
-}
-
-function drawTen() {
-  const results = [];
-  const specials = [];
-  for (let i = 0; i < 10; i++) {
-    const item = rollOne();
-    drawCount++;
-    if (item.special) specials.push({name: item.name, no: drawCount});
-    results.push({item, no: drawCount});
-    history.unshift({name: item.name, qty: item.qty, no: drawCount});
-    if (history.length > 50) history.pop();
+function pDrawTen(){
+  const res=[];
+  for(let i=0;i<10;i++){
+    const item=pRoll();pCnt++;
+    res.push({item,no:pCnt});
+    pHist.unshift({name:item.name,grade:item.grade,no:pCnt});
+    if(pHist.length>50)pHist.pop();
   }
-  updateStats();
-  showSpecial(specials);
-  const ra = document.getElementById('result-area');
-  ra.style.justifyContent = 'flex-start';
-  ra.innerHTML = results.map(r =>
-    `<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid #f0f0ea;">
+  pStats();pHandleResults(res);
+  const ra=document.getElementById('p-result-area');
+  ra.style.justifyContent='flex-start';
+  ra.innerHTML=res.map(r=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid #f0f0ea;">
+    <span style="font-size:14px;color:${pColor(r.item.grade)};font-weight:${r.item.grade!=='n'?'700':'400'}">${r.item.name}${pLabel(r.item.grade)}</span>
+    <span style="font-size:11px;color:#bbb">${r.item.prob.toFixed(5)}%</span>
+  </div>`).join('');
+  pRH();
+}
+function pRH(){document.getElementById('p-history').innerHTML=pHist.map(h=>`<div class="history-item"><span><span class="num">#${h.no}</span><span style="color:${pColor(h.grade)}">${h.name}${pLabel(h.grade)}</span></span></div>`).join('');}
+function pReset(){
+  pCnt=0;pHist=[];
+  document.getElementById('p-count').textContent='0회';
+  document.getElementById('p-cost').textContent='0개';
+  document.getElementById('p-result-area').innerHTML='<span class="result-empty">뽑기 버튼을 눌러보세요</span>';
+  document.getElementById('p-result-area').style.justifyContent='center';
+  document.getElementById('p-history').innerHTML='';
+  document.getElementById('p-special-notice').style.display='none';
+  document.getElementById('p-pickup-notice').style.display='none';
+}
+
+/* ===== 탭3: 길드뽑기 ===== */
+const GUILD_ITEMS = [
+  {name:"강림 강화곤",qty:1,prob:0.020,special:true},{name:"샤흐/바르그/마그나스",qty:1,prob:0.005,special:true},
+  {name:"알 소환서(1개)",qty:1,prob:0.500,special:true},{name:"알 소환서(3개)",qty:3,prob:0.200,special:true},{name:"알 소환서(5개)",qty:5,prob:0.100,special:true},
+  {name:"프리미엄 알 뽑기권",qty:3,prob:0.500},{name:"프리미엄 알 뽑기권",qty:1,prob:0.525},
+  {name:"꿈의 부화기",qty:1,prob:1.000},{name:"꿈의 부화기+1",qty:1,prob:0.700},
+  {name:"꿈의 공격 +34",qty:1,prob:1.800},{name:"꿈의 공격 +35",qty:1,prob:1.500},
+  {name:"꿈의 방어 +34",qty:1,prob:1.800},{name:"꿈의 방어 +35",qty:1,prob:1.500},
+  {name:"꿈의 체력 +136",qty:1,prob:1.800},{name:"꿈의 체력 +140",qty:1,prob:1.500},
+  {name:"꿈의 정수(상급)",qty:1,prob:1.700},
+  {name:"초월의 정수(옐로)",qty:3,prob:0.700},{name:"초월의 정수(레드)",qty:3,prob:0.700},{name:"초월의 정수(블루)",qty:3,prob:0.700},
+  {name:"초월의 정수(옐로)",qty:1,prob:1.300},{name:"초월의 정수(레드)",qty:1,prob:1.300},{name:"초월의 정수(블루)",qty:1,prob:1.300},
+  {name:"Lv - 1",qty:1,prob:1.500},{name:"Lv - 1",qty:3,prob:1.000},
+  {name:"스페셜 레벨업",qty:1,prob:1.500},{name:"스페셜 레벨업",qty:3,prob:1.000},
+  {name:"마법의 망치",qty:1,prob:0.700},
+  {name:"달의 정수",qty:20,prob:1.000},{name:"불의 정수",qty:20,prob:1.000},{name:"물의 정수",qty:20,prob:1.000},
+  {name:"땅의 정수",qty:20,prob:1.000},{name:"태양의 정수",qty:20,prob:1.000},
+  {name:"강림의 돌",qty:5,prob:1.000},{name:"초월의 보석",qty:1,prob:2.000},
+  {name:"상급 강화의 정수",qty:1,prob:1.000},
+  {name:"꿈의 보석",qty:1,prob:6.000},
+  {name:"Lv + 1",qty:1,prob:1.500},{name:"Lv + 1",qty:3,prob:1.000},
+  {name:"캡슐 Lv+1",qty:1,prob:1.500},{name:"캡슐 Lv+1",qty:3,prob:1.000},
+  {name:"각성 Lv+1",qty:1,prob:1.500},{name:"각성 Lv+1",qty:3,prob:1.000},
+  {name:"프리미엄 레벨업",qty:1,prob:1.500},{name:"프리미엄 레벨업",qty:3,prob:1.000},
+  {name:"달의 정수",qty:10,prob:1.200},{name:"불의 정수",qty:10,prob:1.200},{name:"물의 정수",qty:10,prob:1.200},
+  {name:"땅의 정수",qty:10,prob:1.200},{name:"태양의 정수",qty:10,prob:1.200},
+  {name:"달의 정수",qty:5,prob:1.400},{name:"불의 정수",qty:5,prob:1.400},{name:"물의 정수",qty:5,prob:1.400},
+  {name:"땅의 정수",qty:5,prob:1.400},{name:"태양의 정수",qty:5,prob:1.400},
+  {name:"치료제",qty:10,prob:1.000},{name:"치료제",qty:5,prob:1.500},
+  {name:"공격력물약7",qty:3,prob:2.000},{name:"방어력물약7",qty:3,prob:2.000},{name:"체력물약7",qty:3,prob:2.000},
+  {name:"크리물약7",qty:3,prob:2.000},{name:"회피물약7",qty:3,prob:2.000},
+  {name:"공격력물약8",qty:3,prob:3.200},{name:"방어력물약8",qty:3,prob:3.200},{name:"체력물약8",qty:3,prob:3.200},
+  {name:"크리물약8",qty:3,prob:3.200},{name:"회피물약8",qty:3,prob:3.200},
+  {name:"중급 강화의 정수",qty:1,prob:2.000},
+  {name:"강림의 돌",qty:3,prob:2.000},{name:"강림의 돌",qty:1,prob:2.850}
+];
+const gTP = GUILD_ITEMS.reduce((s,i)=>s+i.prob,0);
+let gCnt=0, gHist=[];
+const gSC = {"샤흐/바르그/마그나스":0,"알 소환서(1개)":0,"알 소환서(3개)":0,"알 소환서(5개)":0,"강림 강화곤":0};
+
+function gRoll(){let r=Math.random()*gTP,c=0,item=GUILD_ITEMS[GUILD_ITEMS.length-1];for(let i of GUILD_ITEMS){c+=i.prob;if(r<=c){item=i;break;}}return item;}
+function gStats(){document.getElementById('g-count').textContent=gCnt+'회';document.getElementById('g-cost').textContent=(gCnt*100).toLocaleString()+'개';}
+function gCounter(){
+  const el=document.getElementById('g-special-counter');
+  const has=Object.values(gSC).some(v=>v>0);
+  if(!has){el.style.display='none';return;}
+  el.style.display='flex';
+  el.innerHTML=Object.entries(gSC).map(([n,c])=>`<div class="counter-badge"><span class="badge-name">${n}</span><span style="color:#bbb;font-size:11px;">총</span><span class="badge-count">${c}회</span></div>`).join('');
+}
+function gSpecial(sp){
+  const el=document.getElementById('g-special-notice');
+  sp.forEach(s=>{if(s.name in gSC)gSC[s.name]++;});
+  gCounter();
+  if(!sp.length){el.style.display='none';return;}
+  el.style.display='block';
+  document.getElementById('g-special-body').innerHTML=sp.map(s=>`<b>${s.name}</b> — ${s.no}번째 뽑기에서 획득!`).join('<br>');
+}
+function gDrawOne(){
+  const item=gRoll();gCnt++;gStats();
+  const ra=document.getElementById('g-result-area');
+  ra.style.justifyContent='center';
+  const showQty = !item.name.match(/\d+개$/);
+  ra.innerHTML=`<div class="result-item-name" style="color:${item.special?'#b8860b':'#1a1a1a'}">${item.special?'✨ ':''}${item.name}</div>${showQty?`<div class="result-item-qty">수량: ${item.qty}개</div>`:''}<div class="result-prob">확률: ${item.prob.toFixed(3)}%</div>`;
+  const sp=[];if(item.special)sp.push({name:item.name,no:gCnt});
+  gSpecial(sp);
+  gHist.unshift({name:item.name,qty:item.qty,no:gCnt,special:item.special||false});
+  if(gHist.length>50)gHist.pop();gRH();
+}
+function gDrawTen(){
+  const res=[],sp=[];
+  for(let i=0;i<10;i++){
+    const item=gRoll();gCnt++;
+    if(item.special)sp.push({name:item.name,no:gCnt});
+    res.push({item,no:gCnt});
+    gHist.unshift({name:item.name,qty:item.qty,no:gCnt,special:item.special||false});
+    if(gHist.length>50)gHist.pop();
+  }
+  gStats();gSpecial(sp);
+  const ra=document.getElementById('g-result-area');
+  ra.style.justifyContent='flex-start';
+  ra.innerHTML=res.map(r=>{
+    const showQty = !r.item.name.match(/\d+개$/);
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid #f0f0ea;">
       <span style="font-size:14px;font-weight:${r.item.special?'700':'400'};color:${r.item.special?'#b8860b':'#1a1a1a'}">${r.item.special?'✨ ':''}${r.item.name}</span>
-      <span style="font-size:12px;color:#aaa">${r.item.qty}개</span>
-    </div>`
+      ${showQty?`<span style="font-size:12px;color:#aaa">${r.item.qty}개</span>`:''}
+    </div>`;
+  }).join('');
+  gRH();
+}
+function gRH(){document.getElementById('g-history').innerHTML=gHist.map(h=>{
+  const showQty = !h.name.match(/\d+개$/);
+  return `<div class="history-item"><span><span class="num">#${h.no}</span><span style="color:${h.special?'#b8860b':'#555'}">${h.name}</span></span>${showQty?`<span>${h.qty}개</span>`:''}</div>`;
+}).join('');}
+function gReset(){
+  gCnt=0;gHist=[];Object.keys(gSC).forEach(k=>gSC[k]=0);
+  document.getElementById('g-count').textContent='0회';
+  document.getElementById('g-cost').textContent='0개';
+  document.getElementById('g-result-area').innerHTML='<span class="result-empty">뽑기 버튼을 눌러보세요</span>';
+  document.getElementById('g-result-area').style.justifyContent='center';
+  document.getElementById('g-history').innerHTML='';
+  document.getElementById('g-special-notice').style.display='none';
+  document.getElementById('g-special-counter').style.display='none';
+}
+
+/* ===== 탭4: 정령 뽑기 ===== */
+const SPIRITS_4 = [
+  {name:"노비크",attr:"땅"},{name:"샐리건",attr:"불"},{name:"에르단",attr:"물"},
+  {name:"실라게트",attr:"바람"},{name:"아라칸",attr:"어둠"},{name:"일레니아",attr:"빛"}
+];
+const SPIRITS_5 = [
+  {name:"노드슈렌",attr:"땅"},{name:"노드카이저",attr:"땅"},{name:"노다이나",attr:"땅"},
+  {name:"이그니토",attr:"불"},{name:"샐레이드",attr:"불"},{name:"이프릭션",attr:"불"},
+  {name:"에시오닉",attr:"물"},{name:"엘시오드",attr:"물"},{name:"엘로네스",attr:"물"},
+  {name:"시르케온",attr:"바람"},{name:"시라이자",attr:"바람"},{name:"실리바인",attr:"바람"},
+  {name:"세미온",attr:"어둠"},{name:"스피리온",attr:"어둠"},{name:"아카이랄",attr:"어둠"},
+  {name:"이오닉스",attr:"빛"},{name:"이스틴",attr:"빛"},{name:"일슈타인",attr:"빛"}
+];
+const SPIRITS_6 = [
+  {name:"노에스",attr:"땅",bonus:"체력 +40"},{name:"노에아넨",attr:"땅",bonus:"공격 +10"},{name:"노아스",attr:"땅",bonus:"방어 +10"},
+  {name:"이그니스",attr:"불",bonus:"체력 +40"},{name:"샐리맨더",attr:"불",bonus:"공격 +10"},{name:"이프리트",attr:"불",bonus:"방어 +10"},
+  {name:"엔다이론",attr:"물",bonus:"체력 +40"},{name:"엘레스트라",attr:"물",bonus:"공격 +10"},{name:"엘람임",attr:"물",bonus:"방어 +10"},
+  {name:"실라이튼",attr:"바람",bonus:"체력 +40"},{name:"실레스틴",attr:"바람",bonus:"공격 +10"},{name:"실피드",attr:"바람",bonus:"방어 +10"},
+  {name:"세이드",attr:"어둠",bonus:"체력 +40"},{name:"스프라이트",attr:"어둠",bonus:"공격 +10"},{name:"아르카네",attr:"어둠",bonus:"방어 +10"},
+  {name:"잭오랜턴",attr:"빛",bonus:"체력 +40"},{name:"위스프",attr:"빛",bonus:"공격 +10"},{name:"이시리스",attr:"빛",bonus:"방어 +10"}
+];
+
+const ATTR_ICON = {땅:"🟤",불:"🔴",물:"🔵",바람:"🟢",어둠:"🟣",빛:"🟡"};
+const ATTR_COLOR = {땅:"#8B6914",불:"#cc3300",물:"#0066cc",바람:"#009966",어둠:"#6600cc",빛:"#cc9900"};
+
+// 옵션 쌍: [%값, +값]
+const OPT_PAIRS_4 = [["10%",21],["14%",27]];
+const OPT_PAIRS_5 = [["10%",21],["14%",27],["18%",33]];
+const OPT_PAIRS_6 = [["10%",21],["14%",27],["18%",33],["22%",52]];
+const OPT_TYPES = ["공격","방어","체력"];
+const OPT_CLASS = {공격:"atk",방어:"def",체력:"hp"};
+const OPT_ICON  = {공격:"⚔️",방어:"🛡️",체력:"❤️"};
+
+let sCnt=0, sHist=[], sCost=0;
+let sGradeCnt={4:0,5:0,6:0};
+let sMode='off';
+
+function setSMode(m){
+  if(sMode===m) return;
+  sMode=m;
+  document.getElementById('toggle-s-off').classList.toggle('active', m==='off');
+  document.getElementById('toggle-s-on').classList.toggle('active', m==='on');
+  const badge=document.getElementById('s-mode-badge');
+  if(m==='on'){badge.textContent='확률업 ON';badge.className='mode-badge pickup';}
+  else{badge.textContent='기본 확률';badge.className='mode-badge normal';}
+  sReset();
+}
+
+function sUpdateGrade(grade){
+  sGradeCnt[grade]++;
+  document.getElementById('s-cnt4').textContent=sGradeCnt[4];
+  document.getElementById('s-cnt5').textContent=sGradeCnt[5];
+  document.getElementById('s-cnt6').textContent=sGradeCnt[6];
+}
+
+function rnd(arr){return arr[Math.floor(Math.random()*arr.length)];}
+
+function rollSpirit(){
+  const r=Math.random()*100;
+  let grade, pool;
+  const thresh4 = sMode==='on' ? 77 : 80;
+  if(r<thresh4){grade=4;pool=SPIRITS_4;}
+  else if(r<95){grade=5;pool=SPIRITS_5;}
+  else{grade=6;pool=SPIRITS_6;}
+  const spirit={...rnd(pool), grade};
+  const pairs = grade===4?OPT_PAIRS_4:grade===5?OPT_PAIRS_5:OPT_PAIRS_6;
+  spirit.options = pairs.map(pair=>{
+    const val = Math.random()<0.5 ? pair[0] : pair[1];
+    const type = rnd(OPT_TYPES);
+    return {type, val};
+  });
+  return spirit;
+}
+
+function starStr(g){return '⭐'.repeat(g);}
+function gradeClass(g){return g===6?'grade-6':g===5?'grade-5':'grade-4';}
+
+function renderSpiritCard(s, idx){
+  return `<div class="spirit-card ${gradeClass(s.grade)}" onclick="openModal(${idx})">
+    <div class="s-stars">${starStr(s.grade)}</div>
+    <div class="s-icon">${ATTR_ICON[s.attr]||'✨'}</div>
+    <div class="s-name">${s.name}</div>
+  </div>`;
+}
+
+let sLastResults = [];
+const sSC = {"극막":[],"막플":[]};
+
+function sCheckSpecial(s, no){
+  if(s.grade!==6) return null;
+  const vals=s.options.map(o=>String(o.val));
+  const isPct=v=>v.includes('%');
+  // 극막: %%%+ 순서 + 앞 3개 옵션에 공격/방어/체력 각 1개씩
+  const isGeukmak = isPct(vals[0])&&isPct(vals[1])&&isPct(vals[2])&&!isPct(vals[3]) &&
+    ['공격','방어','체력'].every(t=>s.options.slice(0,3).map(o=>o.type).includes(t));
+  // 막플: %%%+ 순서 (타입 무관)
+  const isMakpl = isPct(vals[0])&&isPct(vals[1])&&isPct(vals[2])&&!isPct(vals[3]);
+  if(isGeukmak) return '극막';
+  if(isMakpl) return '막플';
+  return null;
+}
+
+function sSCCounter(){
+  const el=document.getElementById('s-special-counter');
+  const has=sSC['극막'].length>0||sSC['막플'].length>0;
+  if(!has){el.style.display='none';return;}
+  el.style.display='flex';
+  el.innerHTML=['극막','막플'].map(k=>{
+    if(!sSC[k].length) return '';
+    return `<div class="counter-badge"><span class="badge-name">${k==='극막'?'⚡ 극막':'🛡️ 막플'}</span><span style="color:#bbb;font-size:11px;">총</span><span class="badge-count">${sSC[k].length}회</span></div>`;
+  }).join('');
+}
+
+function sDrawOne(){
+  const s=rollSpirit(); sCnt++; sCost+=100;
+  s.no=sCnt;
+  sUpdateGrade(s.grade);
+  const type=sCheckSpecial(s,sCnt);
+  if(type) sSC[type].push({name:s.name,no:sCnt});
+  sSCCounter();
+  sLastResults=[s];
+  sUpdateStats();
+  document.getElementById('s-result-area').style.display='none';
+  const grid=document.getElementById('s-result-grid');
+  grid.style.display='block';
+  grid.innerHTML=`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">${renderSpiritCard(s,0)}</div>`;
+  sHist.unshift({name:s.name,grade:s.grade,attr:s.attr,no:sCnt});
+  if(sHist.length>50)sHist.pop();
+  sRH();
+}
+
+function sDrawTen(){
+  const results=[];
+  let localCnt=sCnt;
+  for(let i=0;i<11;i++){
+    const s=rollSpirit(); sCnt++;
+    s.no=sCnt;
+    sUpdateGrade(s.grade);
+    const type=sCheckSpecial(s,sCnt);
+    if(type) sSC[type].push({name:s.name,no:sCnt});
+    results.push(s);
+    sHist.unshift({name:s.name,grade:s.grade,attr:s.attr,no:sCnt});
+    if(sHist.length>50)sHist.pop();
+  }
+  sCost+=1000;
+  sSCCounter();
+  sLastResults=results;
+  sUpdateStats();
+  document.getElementById('s-result-area').style.display='none';
+  const grid=document.getElementById('s-result-grid');
+  grid.style.display='block';
+  grid.innerHTML=`<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;">${results.map((s,i)=>renderSpiritCard(s,i)).join('')}</div>`;
+  sRH();
+}
+
+function sUpdateStats(){
+  document.getElementById('s-count').textContent=sCnt+'회';
+  document.getElementById('s-cost').textContent=sCost.toLocaleString()+'개';
+}
+
+function openModal(idx){
+  const s=sLastResults[idx];
+  if(!s)return;
+  document.getElementById('modal-stars').textContent=starStr(s.grade);
+  const ic=document.getElementById('modal-icon');
+  ic.textContent=ATTR_ICON[s.attr]||'✨';
+  ic.style.background=s.grade===6?'#ffe066':s.grade===5?'#b0e8e0':'#d0d0c8';
+  ic.style.border=`2px solid ${ATTR_COLOR[s.attr]||'#aaa'}`;
+  document.getElementById('modal-name').textContent=s.name;
+  document.getElementById('modal-bonus').textContent=s.bonus ? '부가옵 '+s.bonus : '';
+
+  const sNotice=document.getElementById('s-special-notice');
+  const sTitle=document.getElementById('s-special-title');
+  const sBody=document.getElementById('s-special-body');
+  const type=sCheckSpecial(s,s.no);
+  let badge='';
+  if(type==='극막'){
+    const cnt=sSC['극막'].length;
+    badge='<div style="margin:6px auto 8px;display:inline-block;background:#ff4400;color:#fff;font-size:13px;font-weight:700;padding:4px 14px;border-radius:20px;">⚡ 극막</div>';
+    sNotice.style.cssText='display:block;background:#fff0e8;border:1px solid #ff6633;border-radius:10px;padding:0.75rem 1rem;margin-bottom:1rem;';
+    sTitle.style.color='#cc2200'; sTitle.textContent='⚡ 극막 획득!';
+    sBody.innerHTML=`<b>${s.name}</b> — ${s.no}번째 뽑기에서 획득! (누적 ${cnt}회)`;
+  } else if(type==='막플'){
+    const cnt=sSC['막플'].length;
+    badge='<div style="margin:6px auto 8px;display:inline-block;background:#0055cc;color:#fff;font-size:13px;font-weight:700;padding:4px 14px;border-radius:20px;">🛡️ 막플</div>';
+    sNotice.style.cssText='display:block;background:#e8f0ff;border:1px solid #4488ff;border-radius:10px;padding:0.75rem 1rem;margin-bottom:1rem;';
+    sTitle.style.color='#0044aa'; sTitle.textContent='🛡️ 막플 획득!';
+    sBody.innerHTML=`<b>${s.name}</b> — ${s.no}번째 뽑기에서 획득! (누적 ${cnt}회)`;
+  } else {
+    sNotice.style.display='none';
+  }
+  document.getElementById('modal-badge').innerHTML=badge;
+  document.getElementById('modal-options').innerHTML=s.options.map(o=>
+    `<div class="opt-pill ${OPT_CLASS[o.type]}">${OPT_ICON[o.type]} ${o.type} ${o.val}</div>`
   ).join('');
-  renderHistory();
+  document.getElementById('spirit-modal').style.display='flex';
 }
 
-function renderHistory() {
-  const el = document.getElementById('history');
-  el.innerHTML = history.map(h => `<div class="history-item"><span><span class="num">#${h.no}</span>${h.name}</span><span>${h.qty}개</span></div>`).join('');
+function closeModal(){
+  document.getElementById('spirit-modal').style.display='none';
 }
 
-function reset() {
-  drawCount = 0; history = [];
-  document.getElementById('count').textContent = '0회';
-  document.getElementById('cost').textContent = '0원';
-  document.getElementById('result-area').innerHTML = '<span class="result-empty">상자를 눌러 아이템을 뽑아보세요</span>';
-  document.getElementById('result-area').style.justifyContent = 'center';
-  document.getElementById('history').innerHTML = '';
-  document.getElementById('special-notice').style.display = 'none';
+function sRH(){
+  document.getElementById('s-history').innerHTML=sHist.map(h=>`
+    <div class="history-item">
+      <span><span class="num">#${sHist.indexOf(h)+1}</span>${ATTR_ICON[h.attr]} ${h.name}</span>
+      <span style="font-size:11px;color:${h.grade===6?'#cc9900':h.grade===5?'#009988':'#888'}">${starStr(h.grade)}</span>
+    </div>`).join('');
+}
+
+function sReset(){
+  sCnt=0; sCost=0; sHist=[]; sLastResults=[];
+  sGradeCnt={4:0,5:0,6:0};
+  sSC['극막']=[]; sSC['막플']=[];
+  document.getElementById('s-count').textContent='0회';
+  document.getElementById('s-cost').textContent='0개';
+  document.getElementById('s-cnt4').textContent='0';
+  document.getElementById('s-cnt5').textContent='0';
+  document.getElementById('s-cnt6').textContent='0';
+  document.getElementById('s-result-grid').style.display='none';
+  document.getElementById('s-result-area').style.display='flex';
+  document.getElementById('s-result-area').innerHTML='<span class="result-empty">뽑기 버튼을 눌러보세요</span>';
+  document.getElementById('s-history').innerHTML='';
+  document.getElementById('s-special-notice').style.display='none';
+  document.getElementById('s-special-counter').style.display='none';
 }
 </script>
 </body>
